@@ -1,0 +1,34 @@
+name: workplace_safety_app_clean
+description: A Flutter app for workplace safety inspections and hazard reporting.
+publish_to: 'none' # Remove this line if you plan to publish the app
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core Flutter packages
+  cupertino_icons: ^1.0.8
+
+  # Plugins used in your app
+  image_picker: ^1.1.1
+  speech_to_text: ^6.6.0
+  flutter_tts: ^3.8.0
+  flutter_sound: ^9.30.0
+  path_provider: ^2.1.3
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
