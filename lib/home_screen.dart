@@ -8,6 +8,14 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final categories = [
+      'Battery Safety',
+      'Electrical Wires Safety',
+      'Grinder Safety',
+      'Hooks & Cables Safety',
+      'PPE Wear',
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Workplace Safety'),
@@ -16,18 +24,29 @@ class HomeScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SafetyChecklistScreen(category: 'General'),
-                  ),
-                );
-              },
-              child: const Text('Safety Checklist'),
+            Expanded(
+              child: ListView.builder(
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: ListTile(
+                      title: Text(categories[index]),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SafetyChecklistScreen(
+                              category: categories[index],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
