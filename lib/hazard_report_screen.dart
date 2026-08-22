@@ -7,14 +7,14 @@ import 'package:path_provider/path_provider.dart';
 
 import 'models/hazard.dart';
 
-class ReportHazardScreen extends StatefulWidget {
-  const ReportHazardScreen({super.key});
+class HazardReportScreen extends StatefulWidget {
+  const HazardReportScreen({super.key});
 
   @override
-  State<ReportHazardScreen> createState() => _ReportHazardScreenState();
+  State<HazardReportScreen> createState() => _HazardReportScreenState();
 }
 
-class _ReportHazardScreenState extends State<ReportHazardScreen> {
+class _HazardReportScreenState extends State<HazardReportScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   late stt.SpeechToText _speech;
@@ -64,6 +64,8 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
   }
 
   Future<void> _saveHazard() async {
+    FocusScope.of(context).unfocus(); // ✅ closes keyboard
+
     final description = _descriptionController.text.trim();
 
     if (description.isEmpty && _imageFile == null) {
@@ -105,56 +107,57 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Report Hazard'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(), // ✅ tap anywhere to close keyboard
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: const Text('Report Hazard'),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Describe the hazard',
-                border: UnderlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _captureImage,
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Capture Photo'),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Describe the hazard',
+                  border: UnderlineInputBorder(),
                 ),
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  onPressed: _listen,
-                  icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-                  label: Text(_isListening ? 'Listening...' : 'Speak Hazard'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (_imageFile != null)
-              Image.file(
-                _imageFile!,
-                height: 200,
-                fit: BoxFit.cover,
+                maxLines: 2,
               ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveHazard,
-              child: const Text('Save Hazard'),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _captureImage,
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Capture Photo'),
+                  ),
+                  const SizedBox(width: 20),
+                  ElevatedButton.icon(
+                    onPressed: _listen,
+                    icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                    label: Text(_isListening ? 'Listening...' : 'Speak Hazard'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (_imageFile != null)
+                Image.file(
+                  _imageFile!,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _saveHazard,
+                child: const Text('Save Hazard'),
+              ),
+            ],
+          ),
         ),
       ),
     );

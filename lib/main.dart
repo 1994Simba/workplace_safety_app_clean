@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/hazard.dart';
-import 'home_screen.dart';
+import 'login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive
   await Hive.initFlutter();
-
-  // Register the Hazard adapter
   Hive.registerAdapter(HazardAdapter());
-
-  // Open the hazards box
   await Hive.openBox<Hazard>('hazards');
 
   runApp(const WorkplaceSafetyApp());
@@ -27,7 +22,9 @@ class WorkplaceSafetyApp extends StatelessWidget {
       title: 'Workplace Safety',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomeScreen(),
+
+      // ⭐ ALWAYS start with LoginScreen
+      home: const LoginScreen(),
     );
   }
 }
