@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 import 'dart:io';
+
+import 'models/hazard.dart';
 
 class ReportHazardScreen extends StatefulWidget {
   const ReportHazardScreen({super.key});
@@ -54,6 +56,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
 
   Future<void> _saveHazard() async {
     final description = _descriptionController.text.trim();
+
     if (description.isEmpty && _imageFile == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,14 +65,21 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final hazards = prefs.getStringList('hazards') ?? [];
-    hazards.add(description);
-    await prefs.setStringList('hazards', hazards);
+    final hazardBox = Hive.box<Hazard>('hazards');
+
+    final hazard = Hazard(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: "Reported Hazard",
+      description: description,
+      timestamp: DateTime.now(),
+      imagePath: _imageFile?.path,
+    );
+
+    hazardBox.add(hazard);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Hazard saved locally!')),
+      const SnackBar(content: Text('Hazard saved successfully!')),
     );
 
     _descriptionController.clear();
