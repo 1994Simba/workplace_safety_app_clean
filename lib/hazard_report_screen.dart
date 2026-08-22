@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:hive/hive.dart';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 import 'models/hazard.dart';
 
@@ -36,6 +37,14 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
     }
   }
 
+  Future<String?> _saveImagePermanently(File image) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = directory.path;
+    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+    final newImage = await image.copy('$path/$fileName');
+    return newImage.path;
+  }
+
   void _listen() async {
     if (!_isListening) {
       bool available = await _speech.initialize();
@@ -65,6 +74,11 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       return;
     }
 
+    String? savedImagePath;
+    if (_imageFile != null) {
+      savedImagePath = await _saveImagePermanently(_imageFile!);
+    }
+
     final hazardBox = Hive.box<Hazard>('hazards');
 
     final hazard = Hazard(
@@ -72,7 +86,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       title: "Reported Hazard",
       description: description,
       timestamp: DateTime.now(),
-      imagePath: _imageFile?.path,
+      imagePath: savedImagePath,
     );
 
     hazardBox.add(hazard);
