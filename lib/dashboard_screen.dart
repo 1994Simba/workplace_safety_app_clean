@@ -18,8 +18,6 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box('hazards');
-
-    // If box is empty, hazards = []
     final hazards = box.values.whereType<dynamic>().toList();
 
     final highCount = hazards.where((h) => h.severity == "High").length;
@@ -53,9 +51,7 @@ class DashboardScreen extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-
             const SizedBox(height: 40),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -64,9 +60,7 @@ class DashboardScreen extends StatelessWidget {
                 _severityCard("Low", lowCount, Colors.green),
               ],
             ),
-
             const SizedBox(height: 60),
-
             Center(
               child: Text(
                 "Total Hazards: ${highCount + mediumCount + lowCount}",

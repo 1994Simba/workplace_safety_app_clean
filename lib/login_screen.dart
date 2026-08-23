@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'home_screen.dart';
+import 'main_navigation.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const MainNavigation()),
         );
       });
     }
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),   // FIXED
+                        color: Colors.black.withValues(alpha: 0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -147,10 +147,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.white38),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -164,10 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.05),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.white38),
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
