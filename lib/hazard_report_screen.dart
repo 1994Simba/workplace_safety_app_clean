@@ -1,163 +1,182 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:hive/hive.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-
 import 'models/hazard.dart';
 
 class HazardReportScreen extends StatefulWidget {
-  const HazardReportScreen({super.key});
+  final VoidCallback? onHazardSaved;
+
+  const HazardReportScreen({super.key, this.onHazardSaved});
 
   @override
   State<HazardReportScreen> createState() => _HazardReportScreenState();
 }
 
 class _HazardReportScreenState extends State<HazardReportScreen> {
-  final TextEditingController _descriptionController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
-  late stt.SpeechToText _speech;
-  bool _isListening = false;
-  String _text = '';
-  File? _imageFile;
+  final titleController = TextEditingController();
+  final descController = TextEditingController();
+  String imagePath = "";
+  final ImagePicker picker = ImagePicker();
+  late stt.SpeechToText speech;
+  bool isListening = false;
 
   @override
   void initState() {
     super.initState();
-    _speech = stt.SpeechToText();
+    speech = stt.SpeechToText();
   }
 
-  Future<void> _captureImage() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-    if (photo != null) {
-      setState(() {
-        _imageFile = File(photo.path);
-      });
-    }
+  Future<void> openCamera() async {
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+    if (!mounted) return;
+    if (photo != null) setState(() => imagePath = photo.path);
   }
 
-  Future<String?> _saveImagePermanently(File image) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = directory.path;
-    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
-    final newImage = await image.copy('$path/$fileName');
-    return newImage.path;
+  Future<void> openGallery() async {
+    final XFile? photo = await picker.pickImage(source: ImageSource.gallery);
+    if (!mounted) return;
+    if (photo != null) setState(() => imagePath = photo.path);
   }
 
-  void _listen() async {
-    if (!_isListening) {
-      bool available = await _speech.initialize();
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(onResult: (result) {
-          setState(() {
-            _text = result.recognizedWords;
-            _descriptionController.text = _text;
-          });
-        });
-      }
-    } else {
-      setState(() => _isListening = false);
-      _speech.stop();
-    }
-  }
-
-  Future<void> _saveHazard() async {
-    FocusScope.of(context).unfocus(); // ✅ closes keyboard
-
-    final description = _descriptionController.text.trim();
-
-    if (description.isEmpty && _imageFile == null) {
+  Future<void> startListening() async {
+    bool available = await speech.initialize();
+    if (!available) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe or capture a hazard.')),
+        const SnackBar(content: Text("Speech recognition not available")),
+      );
+      return;
+    }
+    setState(() => isListening = true);
+    speech.listen(onResult: (result) {
+      setState(() => descController.text = result.recognizedWords);
+    });
+  }
+
+  void stopListening() {
+    speech.stop();
+    setState(() => isListening = false);
+  }
+
+  void saveHazard() {
+    final title = titleController.text.trim();
+    final description = descController.text.trim();
+
+    if (title.isEmpty || description.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Title and description required")),
       );
       return;
     }
 
-    String? savedImagePath;
-    if (_imageFile != null) {
-      savedImagePath = await _saveImagePermanently(_imageFile!);
-    }
-
-    final hazardBox = Hive.box<Hazard>('hazards');
-
     final hazard = Hazard(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: "Reported Hazard",
+      title: title,
       description: description,
+      imagePath: imagePath,
       timestamp: DateTime.now(),
-      imagePath: savedImagePath,
     );
 
-    hazardBox.add(hazard);
+    final box = Hive.box('hazards');
+    box.add(hazard);
 
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Hazard saved successfully!')),
+      const SnackBar(content: Text("Hazard saved")),
     );
 
-    _descriptionController.clear();
-    setState(() {
-      _imageFile = null;
-      _text = '';
-    });
+    widget.onHazardSaved?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(), // ✅ tap anywhere to close keyboard
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          title: const Text('Report Hazard'),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              TextField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Describe the hazard',
-                  border: UnderlineInputBorder(),
-                ),
-                maxLines: 2,
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: const Text("Report Hazard"),
+        backgroundColor: Colors.blueGrey[900],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: "Hazard Title",
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _captureImage,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Capture Photo'),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: descController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: "Description",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: openCamera,
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text("Camera"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey[900],
+                    foregroundColor: Colors.white,
                   ),
-                  const SizedBox(width: 20),
-                  ElevatedButton.icon(
-                    onPressed: _listen,
-                    icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-                    label: Text(_isListening ? 'Listening...' : 'Speak Hazard'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              if (_imageFile != null)
-                Image.file(
-                  _imageFile!,
-                  height: 200,
-                  fit: BoxFit.cover,
                 ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveHazard,
-                child: const Text('Save Hazard'),
+                const SizedBox(width: 10),
+                ElevatedButton.icon(
+                  onPressed: openGallery,
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text("Gallery"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey[700],
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (imagePath.isNotEmpty)
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                ),
+                child: Image.file(File(imagePath), fit: BoxFit.cover),
               ),
-            ],
-          ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: isListening ? stopListening : startListening,
+              icon: Icon(isListening ? Icons.stop : Icons.mic),
+              label: Text(isListening ? "Stop Listening" : "Speak Description"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey[700],
+                foregroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: saveHazard,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueGrey[900],
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text(
+                  "Save Hazard",
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

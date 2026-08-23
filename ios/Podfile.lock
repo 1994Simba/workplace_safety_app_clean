@@ -1,11 +1,5 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_sound (9.30.0):
-    - Flutter
-    - flutter_sound_core (= 9.30.0)
-  - flutter_sound_core (9.30.0)
-  - flutter_tts (0.0.1):
-    - Flutter
   - speech_to_text (0.0.1):
     - Flutter
     - Try
@@ -13,30 +7,20 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
-  - flutter_tts (from `.symlinks/plugins/flutter_tts/ios`)
   - speech_to_text (from `.symlinks/plugins/speech_to_text/ios`)
 
 SPEC REPOS:
   trunk:
-    - flutter_sound_core
     - Try
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_sound:
-    :path: ".symlinks/plugins/flutter_sound/ios"
-  flutter_tts:
-    :path: ".symlinks/plugins/flutter_tts/ios"
   speech_to_text:
     :path: ".symlinks/plugins/speech_to_text/ios"
 
 SPEC CHECKSUMS:
   Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
-  flutter_sound: d95194f6476c9ad211d22b3a414d852c12c7ca44
-  flutter_sound_core: 7f2626d249d3a57bfa6da892ef7e22d234482c1a
-  flutter_tts: b88dbc8655d3dc961bc4a796e4e16a4cc1795833
   speech_to_text: ae2abc312e619ff1c53e675a9fc4d785a15c03bb
   Try: 5ef669ae832617b3cee58cb2c6f99fb767a4ff96
 

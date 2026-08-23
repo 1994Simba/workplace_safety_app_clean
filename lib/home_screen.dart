@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'login_screen.dart';
-
-// IMPORTANT: This must match your real file name and class name
 import 'hazard_report_screen.dart';
 import 'hazard_history_screen.dart';
 import 'safety_checklist_screen.dart';
+import 'package:hive/hive.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,72 +12,61 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('logged_in', false);
-
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
-  }
-
-  final List<Widget> _pages = const [
-    Center(
-      child: Text(
-        "Dashboard",
-        style: TextStyle(fontSize: 22),
-      ),
-    ),
-
-    // FIXED: This now loads your REAL hazard reporting screen
-    HazardReportScreen(),
-
-    HazardHistoryScreen(),
-    SafetyChecklistScreen(),
-  ];
+  int currentIndex = 0;
+  final historyKey = GlobalKey<HazardHistoryScreenState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text("Workplace Safety"),
+        backgroundColor: Colors.blueGrey[900],
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: _logout,
+            onPressed: () {
+              final box = Hive.box('accounts');
+              box.put('rememberMe', false);
+
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                Navigator.pushReplacementNamed(context, '/login');
+              });
+            },
           ),
         ],
       ),
-
-      body: _pages[_selectedIndex],
-
+      body: IndexedStack(
+        index: currentIndex,
+        children: [
+          const Center(child: Text("Dashboard")),
+          HazardReportScreen(
+            onHazardSaved: () {
+              setState(() => currentIndex = 2);
+              historyKey.currentState?.loadHazards();
+            },
+          ),
+          HazardHistoryScreen(key: historyKey),
+          const SafetyChecklistScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blueAccent,
+        currentIndex: currentIndex,
+        onTap: (index) {
+          setState(() => currentIndex = index);
+          if (index == 2) {
+            historyKey.currentState?.loadHazards();
+          }
+        },
+        selectedItemColor: Colors.blueGrey[900],
         unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: "Dashboard",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.report),
-            label: "Report Hazard",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: "History",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.checklist),
-            label: "Checklist",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
+          BottomNavigationBarItem(icon: Icon(Icons.report), label: "Report"),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
+          BottomNavigationBarItem(icon: Icon(Icons.checklist), label: "Checklist"),
         ],
       ),
     );

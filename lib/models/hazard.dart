@@ -2,28 +2,36 @@ import 'package:hive/hive.dart';
 
 part 'hazard.g.dart';
 
-@HiveType(typeId: 1)
-class Hazard extends HiveObject {
+@HiveType(typeId: 0)
+class Hazard {
   @HiveField(0)
-  String id;
+  final String title;
 
   @HiveField(1)
-  String title;
+  final String description;
 
   @HiveField(2)
-  String description;
+  final String imagePath;
 
   @HiveField(3)
-  String? imagePath;
-
-  @HiveField(4)
-  DateTime timestamp;
+  final DateTime timestamp;
 
   Hazard({
-    required this.id,
     required this.title,
     required this.description,
+    required this.imagePath,
     required this.timestamp,
-    this.imagePath,
   });
+
+  static Future<List<Hazard>> loadHazards() async {
+    final box = Hive.box('hazards');
+    final List<Hazard> hazards = [];
+
+    for (var key in box.keys) {
+      final data = box.get(key);
+      if (data is Hazard) hazards.add(data);
+    }
+
+    return hazards;
+  }
 }

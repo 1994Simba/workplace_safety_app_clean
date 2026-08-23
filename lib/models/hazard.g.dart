@@ -8,7 +8,7 @@ part of 'hazard.dart';
 
 class HazardAdapter extends TypeAdapter<Hazard> {
   @override
-  final int typeId = 1;
+  final int typeId = 0;
 
   @override
   Hazard read(BinaryReader reader) {
@@ -17,27 +17,24 @@ class HazardAdapter extends TypeAdapter<Hazard> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Hazard(
-      id: fields[0] as String,
-      title: fields[1] as String,
-      description: fields[2] as String,
-      timestamp: fields[4] as DateTime,
-      imagePath: fields[3] as String?,
+      title: fields[0] as String,
+      description: fields[1] as String,
+      imagePath: fields[2] as String,
+      timestamp: fields[3] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, Hazard obj) {
     writer
-      ..writeByte(5)
-      ..writeByte(0)
-      ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.title)
-      ..writeByte(2)
-      ..write(obj.description)
-      ..writeByte(3)
-      ..write(obj.imagePath)
       ..writeByte(4)
+      ..writeByte(0)
+      ..write(obj.title)
+      ..writeByte(1)
+      ..write(obj.description)
+      ..writeByte(2)
+      ..write(obj.imagePath)
+      ..writeByte(3)
       ..write(obj.timestamp);
   }
 

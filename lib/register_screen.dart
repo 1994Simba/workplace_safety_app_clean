@@ -1,83 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'home_screen.dart';
-import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  final VoidCallback onRegisterFailed;
+  final VoidCallback onRegisterSuccess;
+
+  const RegisterScreen({
+    super.key,
+    required this.onRegisterFailed,
+    required this.onRegisterSuccess,
+  });
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  bool rememberMe = false;
 
-  @override
-  void initState() {
-    super.initState();
-    final box = Hive.box('accounts');
-    final savedRemember = box.get('rememberMe') ?? false;
-    final savedEmail = box.get('savedEmail') ?? "";
-    final savedPass = box.get('savedPass') ?? "";
-
-    if (savedRemember) {
-      emailController.text = savedEmail;
-      passwordController.text = savedPass;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      });
-    }
-  }
-
-  void login() {
+  void createAccount() {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter email and password")),
-      );
+      widget.onRegisterFailed();
       return;
     }
 
     final box = Hive.box('accounts');
-    final storedEmail = box.get('userEmail');
-    final storedPass = box.get('userPass');
 
-    if (storedEmail == email && storedPass == password) {
-      box.put('savedEmail', email);
-      box.put('savedPass', password);
-      box.put('rememberMe', rememberMe);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid credentials")),
-      );
+    if (box.get('userEmail') == email) {
+      widget.onRegisterFailed();
+      return;
     }
-  }
 
-  void goToRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RegisterScreen(
-          onRegisterFailed: () => Navigator.pop(context),
-          onRegisterSuccess: () => Navigator.pop(context),
-        ),
-      ),
-    );
+    box.put('userEmail', email);
+    box.put('userPass', password);
+
+    widget.onRegisterSuccess();
   }
 
   @override
@@ -99,27 +60,18 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
+            padding: const EdgeInsets.all(30),
             child: Column(
               children: [
                 const Text(
-                  "Welcome Back",
+                  "Create Account",
                   style: TextStyle(
                     fontSize: 34,
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Sign in to continue",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
-                ),
                 const SizedBox(height: 40),
-
                 Container(
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
@@ -172,30 +124,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: rememberMe,
-                            onChanged: (v) => setState(() => rememberMe = v ?? false),
-                            checkColor: Colors.black,
-                            activeColor: Colors.white,
-                          ),
-                          const Text(
-                            "Remember Me",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-
                       const SizedBox(height: 30),
 
                       SizedBox(
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: login,
+                          onPressed: createAccount,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.black,
@@ -204,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           child: const Text(
-                            "Login",
+                            "Create Account",
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -213,9 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20),
 
                       TextButton(
-                        onPressed: goToRegister,
+                        onPressed: () => widget.onRegisterFailed(),
                         child: const Text(
-                          "Create Account",
+                          "Back to Login",
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
