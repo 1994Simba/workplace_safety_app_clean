@@ -18,7 +18,7 @@ class _HazardReportScreenState extends State<HazardReportScreen> {
   final titleController = TextEditingController();
   final descController = TextEditingController();
   String imagePath = "";
-  String severity = "Medium";
+  String selectedSeverity = "Low";
   final ImagePicker picker = ImagePicker();
   late stt.SpeechToText speech;
   bool isListening = false;
@@ -29,8 +29,14 @@ class _HazardReportScreenState extends State<HazardReportScreen> {
     speech = stt.SpeechToText();
   }
 
-  Future<void> pickImage(ImageSource source) async {
-    final XFile? photo = await picker.pickImage(source: source);
+  Future<void> openCamera() async {
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+    if (!mounted) return;
+    if (photo != null) setState(() => imagePath = photo.path);
+  }
+
+  Future<void> openGallery() async {
+    final XFile? photo = await picker.pickImage(source: ImageSource.gallery);
     if (!mounted) return;
     if (photo != null) setState(() => imagePath = photo.path);
   }
@@ -70,8 +76,8 @@ class _HazardReportScreenState extends State<HazardReportScreen> {
       title: title,
       description: description,
       imagePath: imagePath,
+      severity: selectedSeverity,
       timestamp: DateTime.now(),
-      severity: severity,
     );
 
     final box = Hive.box('hazards');
@@ -102,149 +108,155 @@ class _HazardReportScreenState extends State<HazardReportScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Report Hazard",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 60),
+
+              const SizedBox(height: 30),
+
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: "Hazard Title",
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: titleController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: "Hazard Title",
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.05),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: descController,
-                        maxLines: 3,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: "Description",
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.05),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
-                        initialValue: severity,
-                        dropdownColor: Colors.blueGrey[900],
-                        decoration: InputDecoration(
-                          labelText: "Severity Level",
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        items: ["Low", "Medium", "High"].map((level) {
-                          return DropdownMenuItem(
-                            value: level,
-                            child: Text(level, style: const TextStyle(color: Colors.white)),
-                          );
-                        }).toList(),
-                        onChanged: (value) => setState(() => severity = value!),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: () => pickImage(ImageSource.camera),
-                            icon: const Icon(Icons.camera_alt),
-                            label: const Text("Camera"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueGrey[900],
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton.icon(
-                            onPressed: () => pickImage(ImageSource.gallery),
-                            icon: const Icon(Icons.photo_library),
-                            label: const Text("Gallery"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueGrey[700],
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      if (imagePath.isNotEmpty)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Image.file(
-                            File(imagePath),
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: isListening ? stopListening : startListening,
-                        icon: Icon(isListening ? Icons.stop : Icons.mic),
-                        label: Text(isListening ? "Stop Listening" : "Speak Description"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey[700],
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          onPressed: saveHazard,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueGrey[900],
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text(
-                            "Save Hazard",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ],
+                textInputAction: TextInputAction.done,
+                onEditingComplete: () => FocusScope.of(context).unfocus(),
+              ),
+
+              const SizedBox(height: 20),
+
+              TextField(
+                controller: descController,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: "Description",
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-              ],
-            ),
+                textInputAction: TextInputAction.done,
+                onEditingComplete: () => FocusScope.of(context).unfocus(),
+              ),
+
+              const SizedBox(height: 20),
+
+              DropdownButtonFormField<String>(
+                initialValue: selectedSeverity,
+                dropdownColor: const Color(0xFF203A43),
+                decoration: InputDecoration(
+                  labelText: "Severity",
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                items: ["Low", "Medium", "High"]
+                    .map((level) => DropdownMenuItem(
+                          value: level,
+                          child: Text(level, style: const TextStyle(color: Colors.white)),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() => selectedSeverity = value!);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: openCamera,
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text("Camera"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.15),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton.icon(
+                    onPressed: openGallery,
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text("Gallery"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.15),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              if (imagePath.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.file(
+                    File(imagePath),
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton.icon(
+                onPressed: isListening ? stopListening : startListening,
+                icon: Icon(isListening ? Icons.stop : Icons.mic),
+                label: Text(isListening ? "Stop Listening" : "Speak Description"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: saveHazard,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    "Save Hazard",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
