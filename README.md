@@ -45,7 +45,7 @@ A modern Flutter application designed to streamline workplace hazard reporting, 
 
 ## 📂 Project Structure
 
-\`\`\`text
+```text
 lib/
 │
 ├── main.dart
@@ -56,9 +56,8 @@ lib/
 ├── hazard_history_screen.dart
 ├── safety_checklist_screen.dart
 └── login_screen.dart
-\`\`\`
+```
 
----
 
 ## 🔧 Key Implementation Details
 
@@ -108,15 +107,15 @@ loadHazards();
 ### 1. Install dependencies
 \`\`\`bash
 flutter pub get
-\`\`\`
+``\`
 
 ### 2. Initialize Hive
 Ensure Hive boxes are opened in `main.dart` before running the app.
 
 ### 3. Run the app
-\`\`\`bash
+```bash
 flutter run
-\`\`\`
+```
 
 ---
 
